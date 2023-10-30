@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <array>
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <unordered_map>
@@ -46,11 +47,8 @@ class ShmManager
   };
 
   ShmManager(const ShmManager&) = delete;
-
   ShmManager& operator=(const ShmManager&) = delete;
-
   ShmManager(ShmManager&& other) = delete;
-
   ShmManager& operator=(ShmManager&& other) = delete;
 
   static int send_request(const Request& req)
@@ -155,6 +153,14 @@ class ShmManager
 public:
   ShmManager()
   {
+  }
+
+  ~ShmManager()
+  {
+    for (const auto& [name, fd] : fd_map)
+    {
+      close(fd);
+    }
   }
 
   void run()
@@ -264,7 +270,13 @@ public:
 #if SHMMANAGER_DEBUG
           std::cout << "manager: removing '" << name << "'" << std::endl;
 #endif
-          fd_map.erase(name);
+          auto it = fd_map.find(name);
+          if (it == fd_map.end())
+          {
+            throw std::runtime_error("manager: could not find entry in fd_map");
+          }
+          close(it->second);
+          fd_map.erase(it);
         }
         int ret = 0;
 #if SHMMANAGER_DEBUG
