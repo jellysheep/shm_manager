@@ -1,0 +1,23 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "pybind11>=2.10.0"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shm_manager"
+version = "0.0.1"
+authors = [
+  { name="Max Mertens", email="max.mail@dameweb.de" },
+]
+description="Shared memory manager handling a list of anonymous memory regions provided over abstract unix sockets"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/jellysheep/shm_manager"
+"Bug Tracker" = "https://github.com/jellysheep/shm_manager/issues"
