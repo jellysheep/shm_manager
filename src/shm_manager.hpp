@@ -59,7 +59,7 @@ static int send_request(const Request& req)
   struct sockaddr_un server_addr;
   memset(&server_addr, 0, sizeof(server_addr));
   server_addr.sun_family = AF_UNIX;
-  std::strncpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
+  std::memcpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
 
   if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
   {
@@ -184,7 +184,7 @@ public:
     struct sockaddr_un server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sun_family = AF_UNIX;
-    std::strncpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
+    std::memcpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
 
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
     {
@@ -432,7 +432,7 @@ public:
     struct sockaddr_un server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sun_family = AF_UNIX;
-    std::strncpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
+    std::memcpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
 
     do
     {
