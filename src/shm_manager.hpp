@@ -84,21 +84,25 @@ static int receive_ret(int client_socket)
 #if SHMMANAGER_DEBUG
   std::cout << "client: received return " << ret << std::endl;
 #endif
-  close(client_socket);
+  if (close(client_socket) != 0)
+  {
+    throw std::runtime_error("client: error closing socket");
+  }
   return ret;
 }
 
 static int receive_fd(int client_socket)
 {
+  char nothing[1];
   char buf[128];
-  // struct iovec nothing_ptr;
-  // nothing_ptr.iov_base = nullptr;
-  // nothing_ptr.iov_len = 0;
+  struct iovec nothing_ptr;
+  nothing_ptr.iov_base = nothing;
+  nothing_ptr.iov_len = 1;
   struct msghdr msg;
   msg.msg_name = nullptr;
   msg.msg_namelen = 0;
-  msg.msg_iov = nullptr;  //&nothing_ptr;
-  msg.msg_iovlen = 0;
+  msg.msg_iov = &nothing_ptr;
+  msg.msg_iovlen = 1;
   msg.msg_flags = 0;
   msg.msg_control = buf;
   msg.msg_controllen = sizeof(struct cmsghdr) + sizeof(int);
@@ -159,7 +163,13 @@ public:
   {
     for (const auto& [name, fd] : fd_map)
     {
-      close(fd);
+#if SHMMANAGER_DEBUG
+      std::cout << "manager: closing fd " << fd << std::endl;
+#endif
+      if (close(fd) != 0)
+      {
+        throw std::runtime_error("manager: error closing fd");
+      }
     }
   }
 
@@ -200,25 +210,26 @@ public:
 #if SHMMANAGER_DEBUG
       std::cout << "manager: got connection" << std::endl;
 #endif
-      bool quit = false;
       try
       {
-        quit = handle_client(client_socket);
+        bool quit = handle_client(client_socket);
+        if (quit)
+        {
+          break;
+        }
       }
       catch (const std::runtime_error& e)
       {
         std::cerr << "manager: error while handling client: " << e.what() << std::endl;
       }
-      close(client_socket);
-      if (quit)
-      {
-        break;
-      }
     }
 #if SHMMANAGER_DEBUG
     std::cout << "manager: quitting" << std::endl;
 #endif
-    close(server_socket);
+    if (close(server_socket) != 0)
+    {
+      throw std::runtime_error("manager: error closing server socket");
+    }
   }
 
   bool handle_client(int client_socket)
@@ -227,7 +238,9 @@ public:
     ssize_t len = recv(client_socket, buffer, sizeof(buffer), 0);
     if (len != sizeof(Request))
     {
-      throw std::runtime_error("manager: error receiving client request");
+      // this is probably due to wait_for_manager()
+      // throw std::runtime_error("manager: error receiving client request");
+      return false;
     }
     Request req = *(Request*)buffer;
 #if SHMMANAGER_DEBUG
@@ -282,7 +295,10 @@ public:
       {
         throw std::runtime_error("manager: error sending fd");
       }
-      close(client_socket);
+      if (close(client_socket) != 0)
+      {
+        throw std::runtime_error("manager: error closing client socket");
+      }
     }
     else
     {
@@ -296,7 +312,13 @@ public:
         {
           throw std::runtime_error("manager: could not find entry in fd_map");
         }
-        close(it->second);
+#if SHMMANAGER_DEBUG
+        std::cout << "manager: closing fd " << it->second << std::endl;
+#endif
+        if (close(it->second) != 0)
+        {
+          throw std::runtime_error("manager: error closing fd");
+        }
         fd_map.erase(it);
       }
       int ret = 0;
@@ -308,7 +330,10 @@ public:
       {
         throw std::runtime_error("manager: error sending return");
       }
-      close(client_socket);
+      if (close(client_socket) != 0)
+      {
+        throw std::runtime_error("manager: error closing client socket");
+      }
       if (req.mode == RequestMode::QUIT)
       {
         return true;
@@ -343,7 +368,11 @@ class ShmClient
       throw std::runtime_error("client: error sending request");
     }
     struct stat fd_state = {};
-    fstat(fd, &fd_state);
+    if (fstat(fd, &fd_state) != 0)
+    {
+      std::cerr << "error " << errno << std::endl;
+      throw std::runtime_error("client: error on fstat()");
+    }
     if (fd_state.st_size == 0)
     {
       throw std::runtime_error("client: received fd has zero length");
@@ -377,7 +406,10 @@ public:
 #if SHMMANAGER_DEBUG
       std::cout << "client: closing fd " << fd << std::endl;
 #endif
-      close(fd);
+      if (close(fd) != 0)
+      {
+        throw std::runtime_error("client: error closing fd");
+      }
     }
     if (addr)
     {
