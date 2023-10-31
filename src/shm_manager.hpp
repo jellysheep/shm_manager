@@ -420,6 +420,34 @@ public:
     }
   }
 
+  template <class Predicate>
+  static bool wait_for_manager(Predicate stop_waiting)
+  {
+    int client_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (client_socket == -1)
+    {
+      throw std::runtime_error("client: error creating socket");
+    }
+
+    struct sockaddr_un server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sun_family = AF_UNIX;
+    std::strncpy(server_addr.sun_path, socket_path.data(), SOCKET_PATH_SIZE);
+
+    do
+    {
+      if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == 0)
+      {
+        if (close(client_socket) != 0)
+        {
+          throw std::runtime_error("client: error closing socket");
+        }
+        return true;
+      }
+    } while (!stop_waiting());
+    return false;
+  }
+
   static ShmClient create(const std::string& name, size_t size)
   {
     return get(name, RequestMode::CREATE, size);

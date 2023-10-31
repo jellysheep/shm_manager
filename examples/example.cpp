@@ -32,7 +32,11 @@ void client_process_2()
 int main()
 {
   auto manager = std::thread(manager_process);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  shm_manager::ShmClient::wait_for_manager([]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    return false;
+  });
 
   auto client1 = std::thread(client_process_1);
   client1.join();
