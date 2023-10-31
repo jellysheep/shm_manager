@@ -1,7 +1,7 @@
 # ShmManager
 
-Shared memory manager handling a list of anonymous memory regions. Clients can
-request new or existing memory regions based on a string index, which are
+Shared memory manager handling a list of non-persistent memory regions. Clients
+can request new or existing memory regions based on a string index, which are
 provided by the manager as file descriptors sent over abstract unix sockets.
 
 No persistent data structures or filesystem features are used. Thus, when all
@@ -56,7 +56,7 @@ int main() {
 
 See `examples/example.py`.
 
-This library works nicely together with [structstore](https://github.com/jellysheep/structstore):
+This library integrates nicely with [structstore](https://github.com/jellysheep/structstore):
 
 ```python
 client = shm_manager.ShmClient.create('my_buffer', 2048)
@@ -68,7 +68,7 @@ For a complete example, see `examples/example_structstore.py`.
 
 ## Implementation details
 
-Anonymous shared memory regions are created using `memfd_create`. File
+Non-persistent shared memory regions are created using `memfd_create`. File
 descriptors are sent to clients over abstract unix sockets using `SCM_RIGHTS`.
 
 ## License

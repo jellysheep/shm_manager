@@ -11,7 +11,7 @@ version = "0.0.1"
 authors = [
   { name="Max Mertens", email="max.mail@dameweb.de" },
 ]
-description="Shared memory manager handling a list of anonymous memory regions provided over abstract unix sockets"
+description="Shared memory manager handling a list of non-persistent memory regions provided over abstract unix sockets"
 readme = "README.md"
 requires-python = ">=3.6"
 classifiers = [

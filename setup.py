@@ -12,7 +12,7 @@ ext_modules = [
 
 setup(name='shm_manager',
       version='0.0.1',
-      description='Shared memory manager handling a list of anonymous memory regions provided over abstract unix sockets',
+      description='Shared memory manager handling a list of non-persistent memory regions provided over abstract unix sockets',
       author='Max Mertens',
       author_email='max.mail@dameweb.de',
       license='BSD-3-Clause',
